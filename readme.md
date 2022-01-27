@@ -16,6 +16,8 @@ To switch between dictionaries, change the `dict_file` variable in [run.py](run.
 * `scrabble-dict.txt` ~8,900 5-letter words
 * `small-dict.txt` ~2,500 5-letter words
 
+https://user-images.githubusercontent.com/7003930/151445292-68a87aba-31f7-44c0-b9cb-6bde194b4afa.mp4
+
 ## Requirements
 
 * Python 3.5+
