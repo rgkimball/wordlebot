@@ -1,5 +1,3 @@
-
-
 # Initial setup and pruning of dictionary:
 print('Loading English dictionary...')
 
@@ -8,7 +6,7 @@ word_length = 5
 dict_file = 'scrabble-dict.txt'
 all_letters = {x: 0 for x in list('abcdefghijklmnopqrstuvwxyz')}
 
-with open(dict_file, 'r') as fo:  # noqa
+with open('dictionaries\\' + dict_file, 'r') as fo:
     for line in fo.read().splitlines():
         line = line.lower()
         if len(line) == word_length:

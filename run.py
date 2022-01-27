@@ -10,7 +10,7 @@ all_letters = {x: 0 for x in list('abcdefghijklmnopqrstuvwxyz')}
 
 valid_letters = []
 
-with open(dict_file, 'r') as fo:
+with open('dictionaries\\' + dict_file, 'r') as fo:
     for line in fo.read().splitlines():
         line = line.lower()
         if len(line) == word_length:
