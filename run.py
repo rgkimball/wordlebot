@@ -1,15 +1,14 @@
 import pandas as pd
 
 # Initial setup and pruning of dictionary:
+print('Loading English dictionary...')
 
 words = []
 word_length = 5
-dict_file = 'en-words.txt'
+dict_file = 'small-dict.txt'
 all_letters = {x: 0 for x in list('abcdefghijklmnopqrstuvwxyz')}
 
 valid_letters = []
-grid = {i: list(all_letters.copy().keys()) for i in range(word_length)}
-
 
 with open(dict_file, 'r') as fo:
     for line in fo.read().splitlines():
@@ -82,27 +81,36 @@ def rank_words(letter_set, word_set, rec=0):
     :param rec:
     :return:
     """
-    allowed = []
-    for lets in grid.values():
-        allowed.extend(lets)
+    allowed = letter_set
+    if SOLVE_MODE == 'EASY':
+        allowed = list(set(''.join(possible_words)))
+    else:
+        for lets in grid.values():
+            allowed.extend(lets)
     allowed = list(set(allowed))
     importance = rank_letters(allowed)
 
     valid_words = list(filter(
-        lambda word: all(let in letter_set for let in word) and word not in word_set,
+        lambda word: all(let in allowed for let in word) and word not in word_set,
         words
     ))
 
+    if len(possible_words) == 1:
+        valid_words = possible_words
+
     # We only want concrete guesses once we've eliminated most possibilities:
-    if SOLVE_MODE == 'HARD' or len(word_set) > 2:
+    if SOLVE_MODE == 'HARD' or len(words_tested) > 3:
         valid_words = [word for word in valid_words if word in possible_words]
         valid_words = remove_invalid_words(valid_words)
     else:
         # In EASY mode, we want to de-emphasize known letters in subsequent guesses
-        # FIXME/TODO: EASY mode is known to remove answer words in some puzzles.
+        point = 'break'
         for pos, values in grid.items():
-            if len(values) == 1:
-                importance[values[0]] = 0.01
+            if len(values) == 1 and values[0] in importance:
+                importance[values[0]] = 0
+        for letter in letters_tested:
+            if letter in importance:
+                importance[letter] = 0
 
     word_rank = pd.Series({
         word: importance.loc[list(word)].sum() for word in valid_words
@@ -143,21 +151,29 @@ def parse_response(response, guess_word):
 
     valid = list('ci_')
     if not len(response):
-        new_word = input('Enter your word:')
-        err = f'Now provide the feedback response: '
-        user_input = input(err)
-        return parse_response(user_input, new_word)
+        return None
 
-    if not all(letter in valid for letter in response) or len(response) > word_length:
+    if len(response) > word_length:
         err = f'`{response}` is invalid, must {word_length} of {valid}. Try again:'
         user_input = input(err)
         return parse_response(user_input, guess_word)
 
+    if not all(letter in valid for letter in response):
+        if all(letter in all_letters.keys() for letter in response):
+            print(f'User override of suggested word: {response}\n')
+            user_input = input(f'Now provide feedback response using {valid}: ')
+            return parse_response(user_input, response)
+        else:
+            err = f'`{response}` is invalid, must {word_length} of {valid}. Try again:'
+            user_input = input(err)
+            return parse_response(user_input, guess_word)
+
     if all(i == 'c' for i in response):
         w1, w2 = ('were', 'words') if len(possible_words) > 1 else ('was', 'word')
+        rem = ', '.join(list(map(str.upper, possible_words)))
         print(f'Congrats!'
-              f'\nThere {w1} {len(possible_words)} {w2} remaining: {possible_words}')
-        exit(0)
+              f'\nThere {w1} {len(possible_words)} {w2} remaining: {rem}')
+        return True
 
     for i, char in enumerate(response):
         this_letter = guess_word[i]
@@ -182,69 +198,111 @@ def parse_response(response, guess_word):
                     except ValueError:
                         pass
 
+    return guess_word
 
+
+grid = {}
 words_tested = []
 letters_tested = []
-stages = 6
+possible_words = []
 
-print(f"""
-WordleBot
-====================================
-This puzzle solver implements a search algorithm that systematically tests the most common letters at
-the beginning, middle and end of English words consisting of {word_length} letter{'s' if word_length > 1 else ''}.
 
-In each stage, use the proposed word in the puzzle. When you receive a response, enter
-one character for each letter and press Enter. For example, if your first guess is "STARE"
-the puzzle may reveal that the "A" is in the correct position, and the "E" is in the word
-but in the wrong position. In this case, you'd enter: 
+def run():
+    global grid, words_tested, letters_tested, possible_words, valid_letters
 
-__c_i
+    words_tested = []
+    valid_letters = []
+    letters_tested = []
+    possible_words = words.copy()
+    grid = {i: list(all_letters.copy().keys()) for i in range(word_length)}
 
-If you want to guess something other than what is suggested, press enter and type your
-guess instead. The solver will then prompt for the response to your guess.
+    turns = 6
+    for turn in range(turns):
+        lset = [let for let in all_letters.keys() if let not in letters_tested]
+        ranked = rank_words(lset, words_tested)
 
-Good luck!
-""")  # noqa
+        guess, counter = None, 0
 
-SOLVE_MODE = 'HARD'  # alternatively, 'EASY'
-"""
-Note:
+        while not guess:
+            w = ranked.iloc[counter]
+            this_word, score = w.name, w.word_score
+            print(
+                f'\nTurn {turn + 1}/{turns}: {this_word.upper()} '
+                f'(word score: {score:0.2f}, remaining possible words: '
+                f'{len(possible_words):,})'
+            )
+            guess = parse_response(user := input('Response:'), this_word)
 
-By default, the algorithm will play the game in "hard" mode, where any previous hints
-must be included in subsequent guesses. This makes puzzles like "STATE" difficult, since
-your guesses can only permute a single letter beginning from the optimal guess "STARE":
+            counter += 1
 
-Stage 1: stare (score: 5.8072429895401)
-Response ([c] = correct, [i] = included, [_] = excluded >? ccc_c
-Stage 2: stale (score: 5.797328352928162)
-Response ([c] = correct, [i] = included, [_] = excluded >? ccc_c
-Stage 3: stage (score: 5.335524678230286)
-Response ([c] = correct, [i] = included, [_] = excluded >? ccc_c
-Stage 4: stake (score: 5.272907614707947)
-Response ([c] = correct, [i] = included, [_] = excluded >? ccc_c
-Stage 5: stave (score: 5.085055232048035)
-Response ([c] = correct, [i] = included, [_] = excluded >? ccc_c
-Stage 6: state (score: 4.729284286499023)
-Response ([c] = correct, [i] = included, [_] = excluded 
+        if guess is True:
+            break
 
-"""
+        words_tested.append(guess)
+        possible_words = remove_invalid_words(possible_words)
+        if len(possible_words) < 10:
+            print(f"\nOnly {len(possible_words)} words remain in the dictionary!"
+                  f"\n\t{', '.join(list(map(str.upper, possible_words)))}")
+        letters_tested.extend(list(guess))
 
-possible_words = words.copy()
+    if guess is not True:
+        print(
+            f"Better luck next time. Possible words were:"
+            f"{', '.join(list(map(str.upper, possible_words)))}"
+        )
 
-for stage in range(stages):
-    lset = [let for let in all_letters.keys() if let not in letters_tested]
-    ranked = rank_words(lset, words_tested)
-    w = ranked.iloc[0]
-    this_word, score = w.name, w.word_score
-    print(
-        f'\nStage {stage + 1}: {this_word.upper()} '
-        f'(word score: {score:0.2f}, remaining possible words: {len(possible_words):,})'
-    )
-    user = input('Response:')
-    parse_response(user, this_word)
 
-    words_tested.append(this_word)
-    possible_words = remove_invalid_words(possible_words)
-    letters_tested.extend(list(this_word))
+if __name__ == '__main__':
 
-print(f'Better luck next time. Possible words were: {",".join(possible_words)}')
+    print(f"""
+    WordleBot
+    ====================================
+    This puzzle solver implements a search algorithm that systematically tests the 
+    most common letters at
+    the beginning, middle and end of English words consisting of {word_length} 
+    letter{'s' if word_length > 1 else ''}.
+
+    In each stage, use the proposed word in the puzzle. When you receive a response, 
+    enter
+    one character for each letter and press Enter. For example, if your first guess 
+    is "STARE"
+    the puzzle may reveal that the "A" is in the correct position, and the "E" is in 
+    the word
+    but in the wrong position. In this case, you'd enter: 
+
+    __c_i
+
+    If the algorithm proposes a word that is not in the Wordle dictionary, 
+    press Enter and
+    a new suggestion will be generated.
+
+    If you want to guess something other than what is suggested, simply type your
+    guess instead. The solver will then prompt for the response to your guess.
+
+    Good luck!
+    """)  # noqa
+
+    SOLVE_MODE = 'EASY'  # alternatively, 'EASY'
+    """
+    Note:
+
+    By default, the algorithm will play the game in "hard" mode, where any previous 
+    hints must be included in subsequent guesses. This makes puzzles like "STATE"
+    difficult, since your guesses can only permute one letter if starting from "STARE":
+
+    Stage 1: stare (score: 5.8072429895401)
+    Response >? ccc_c
+    Stage 2: stale (score: 5.797328352928162)
+    Response >? ccc_c
+    Stage 3: stage (score: 5.335524678230286)
+    Response >? ccc_c
+    Stage 4: stake (score: 5.272907614707947)
+    Response >? ccc_c
+    Stage 5: stave (score: 5.085055232048035)
+    Response >? ccc_c
+    Stage 6: state (score: 4.729284286499023)
+    Response >? ccccc
+    """
+
+    while True:
+        run()
