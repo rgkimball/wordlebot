@@ -4,6 +4,8 @@ A simple search-based puzzle solver for [Wordle](https://www.powerlanguage.co.uk
 
 Inspired by and tested using [@adjusa's](https://github.com/ajusa) clone, [Hyperwordle](https://arhamjain.com/hyperwordle/).
 
+![WordleBot Demo](https://user-images.githubusercontent.com/7003930/151445959-9e23f1fd-76d8-4aed-a2af-3ffcf14e0536.gif)
+
 By default, this uses the Scrabble dictionary, which seems to cover most words in Wordle clones. You 
 can optionally switch to a smaller dictionary, or to the much larger English dictionary provided by [@dwyl](https://github.com/dwyl/english-words) 
 (~16k 5-letter words), which is more comprehensive than the dictionary used by official Wordle and related puzzles. This 
@@ -15,8 +17,6 @@ To switch between dictionaries, change the `dict_file` variable in [run.py](run.
 * `large-dict.txt` ~16,000 5-letter words
 * `scrabble-dict.txt` ~8,900 5-letter words
 * `small-dict.txt` ~2,500 5-letter words
-
-https://user-images.githubusercontent.com/7003930/151445292-68a87aba-31f7-44c0-b9cb-6bde194b4afa.mp4
 
 ## Requirements
 
