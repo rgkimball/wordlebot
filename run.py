@@ -255,53 +255,48 @@ def run():
 if __name__ == '__main__':
 
     print(f"""
-    WordleBot
-    ====================================
-    This puzzle solver implements a search algorithm that systematically tests the 
-    most common letters at
-    the beginning, middle and end of English words consisting of {word_length} 
-    letter{'s' if word_length > 1 else ''}.
+WordleBot
+====================================
+This puzzle solver implements a search algorithm that systematically tests the most
+common letters at the beginning, middle and end of English words consisting of {word_length} 
+letter{'s' if word_length > 1 else ''}.
 
-    In each stage, use the proposed word in the puzzle. When you receive a response, 
-    enter
-    one character for each letter and press Enter. For example, if your first guess 
-    is "STARE"
-    the puzzle may reveal that the "A" is in the correct position, and the "E" is in 
-    the word
-    but in the wrong position. In this case, you'd enter: 
+In each stage, use the proposed word in the puzzle. When you receive a response, enter
+one character for each letter and press Enter. For example, if your first guess is "STARE"
+the puzzle may reveal that the "A" is in the correct position, and the "E" is in the word
+but in the wrong position. In this case, you'd enter: 
 
-    __c_i
+__c_i
 
-    If the algorithm proposes a word that is not in the Wordle dictionary, 
-    press Enter and
-    a new suggestion will be generated.
+If the algorithm proposes a word that is not in the Wordle dictionary, press Enter and
+a new suggestion will be generated.
 
-    If you want to guess something other than what is suggested, simply type your
-    guess instead. The solver will then prompt for the response to your guess.
+If you want to guess something other than what is suggested, simply type your guess
+instead. The solver will then prompt for the response to your guess.
 
-    Good luck!
+Good luck!
     """)  # noqa
 
-    SOLVE_MODE = 'EASY'  # alternatively, 'EASY'
+    SOLVE_MODE = 'EASY'  # EASY or HARD; whether you must use all hints in guesses
     """
     Note:
 
-    By default, the algorithm will play the game in "hard" mode, where any previous 
-    hints must be included in subsequent guesses. This makes puzzles like "STATE"
-    difficult, since your guesses can only permute one letter if starting from "STARE":
+    If the game is being played in "hard" mode, where any previous 
+    hints must be included in subsequent guesses, words like "STATE" will be less likely
+    to solve since your guesses can only permute one letter if starting from "STARE":
 
-    Stage 1: stare (score: 5.8072429895401)
-    Response >? ccc_c
-    Stage 2: stale (score: 5.797328352928162)
-    Response >? ccc_c
-    Stage 3: stage (score: 5.335524678230286)
-    Response >? ccc_c
-    Stage 4: stake (score: 5.272907614707947)
-    Response >? ccc_c
-    Stage 5: stave (score: 5.085055232048035)
-    Response >? ccc_c
-    Stage 6: state (score: 4.729284286499023)
-    Response >? ccccc
+        Stage 1: stare (score: 5.8072429895401)
+        Response >? ccc_c
+        Stage 2: stale (score: 5.797328352928162)
+        Response >? ccc_c
+        Stage 3: stage (score: 5.335524678230286)
+        Response >? ccc_c
+        Stage 4: stake (score: 5.272907614707947)
+        Response >? ccc_c
+        Stage 5: stave (score: 5.085055232048035)
+        Response >? ccc_c
+        Stage 6: state (score: 4.729284286499023)
+        Response >? ccccc
     """
 
     while True:
