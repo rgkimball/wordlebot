@@ -5,7 +5,7 @@ print('Loading English dictionary...')
 
 words = []
 word_length = 5
-dict_file = 'small-dict.txt'
+dict_file = 'scrabble-dict.txt'
 all_letters = {x: 0 for x in list('abcdefghijklmnopqrstuvwxyz')}
 
 valid_letters = []
